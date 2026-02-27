@@ -1,7 +1,7 @@
-# Memory Ontology — Kùzu Schema v3 (Optimized Polymorphic REL Tables)
+# Memory Ontology 
 
 **Bipartite Graph with Dedicated Typed Edge Nodes**
-Semantic Spacetime + FIRE-inspired Memory Ontology
+Semantic Spacetime + FARO-inspired Memory Ontology
 
 ---
 
