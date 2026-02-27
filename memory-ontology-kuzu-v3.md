@@ -1,7 +1,7 @@
 # Memory Ontology — LadybugDB Schema
 
 **Bipartite Graph with Dedicated Typed Edge Nodes**
-Semantic Spacetime + FIRE-inspired Memory Ontology
+Semantic Spacetime + FARO-inspired Memory Ontology
 
 ---
 
