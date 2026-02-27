@@ -1,4 +1,4 @@
-# Memory Ontology — Kùzu Schema v3 (Optimized Polymorphic REL Tables)
+# Memory Ontology — LadybugDB Schema
 
 **Bipartite Graph with Dedicated Typed Edge Nodes**
 Semantic Spacetime + FIRE-inspired Memory Ontology
@@ -17,13 +17,39 @@ Semantic Spacetime + FIRE-inspired Memory Ontology
 
 ## Inheritance Hierarchy (via tables, not edges)
 
+### Entity Nodes
+
 ```
 Entity
   ├── Time
   │     └── AbstractTime
-  ├── Event
-  ├── Memory
   └── Fact
+        └── Event
+              └── Memory
+```
+
+### Relation Nodes (Edge Node Tables, layer = 0)
+
+All relation nodes share the universal columns. Grouped by semantic category:
+
+```
+RelationNode  (universal: label, label_resolved, learned_at, expire_at, created_at, updated_at, layer=0, context)
+  ├── Spacetime
+  │     ├── Contains      (containment_type, weight)
+  │     ├── Similar       (similarity, sim_context, sim_method)
+  |     ├── LeadsTo       (probability, strength, mechanism)
+  │     └── HasProperty   (property_name, property_value, prop_context, certainty)
+  ├── Causal
+  │     ├── Prevents      (probability, strength, mechanism)
+  │     ├── Causes        (probability, strength, mechanism, directness)
+  │     └── BecauseOf     (probability, strength, explanation)
+  ├── Temporal
+  │     ├── Before        (gap_duration, confidence)
+  │     ├── After         (gap_duration, confidence)
+  │     └── During        (overlap_type, confidence)
+  └── Validity
+        ├── ValidFrom     (precision, confidence)
+        └── ValidTo       (precision, confidence, termination)
 ```
 
 ---
@@ -58,7 +84,7 @@ label_embedding  FLOAT[518]          -- embedding vector for semantic search
 ```cypher
 CREATE NODE TABLE Entity (
     id               STRING PRIMARY KEY,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     label_embedding  FLOAT[518],
@@ -79,7 +105,7 @@ CREATE NODE TABLE Time (
     granularity      STRING,
     starts_at        TIMESTAMP,
     ends_at          TIMESTAMP,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -97,7 +123,7 @@ CREATE NODE TABLE Time (
 CREATE NODE TABLE AbstractTime (
     id               STRING PRIMARY KEY,
     semantics        STRING,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -117,7 +143,7 @@ CREATE NODE TABLE Fact (
     predicate        STRING,
     certainty        DOUBLE DEFAULT 1.0,
     source           STRING,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     label_embedding  FLOAT[518],
@@ -140,7 +166,7 @@ CREATE NODE TABLE Event (
     source           STRING,
     status           STRING DEFAULT 'occurred',
     is_ongoing       BOOLEAN DEFAULT FALSE,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     label_embedding  FLOAT[518],
@@ -166,7 +192,7 @@ CREATE NODE TABLE Memory (
     significance     STRING,
     emotions         STRING[],
     reflection       STRING,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     label_embedding  FLOAT[518],
@@ -192,7 +218,7 @@ CREATE NODE TABLE Contains (
     id               STRING PRIMARY KEY,
     containment_type STRING,              -- 'composition'|'membership'|'aggregation'|'part_of'
     weight           DOUBLE DEFAULT 1.0,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -214,7 +240,7 @@ CREATE NODE TABLE LeadsTo (
     probability      DOUBLE DEFAULT 1.0,
     strength         DOUBLE DEFAULT 1.0,
     mechanism        STRING,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -236,7 +262,7 @@ CREATE NODE TABLE Prevents (
     probability      DOUBLE DEFAULT 1.0,
     strength         DOUBLE DEFAULT 1.0,
     mechanism        STRING,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -259,7 +285,7 @@ CREATE NODE TABLE Causes (
     strength         DOUBLE DEFAULT 1.0,
     mechanism        STRING,
     directness       STRING DEFAULT 'direct',
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -281,7 +307,7 @@ CREATE NODE TABLE BecauseOf (
     probability      DOUBLE DEFAULT 1.0,
     strength         DOUBLE DEFAULT 1.0,
     explanation      STRING,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -303,7 +329,7 @@ CREATE NODE TABLE Similar (
     similarity       DOUBLE DEFAULT 0.0,
     sim_context      STRING,
     sim_method       STRING,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -326,7 +352,7 @@ CREATE NODE TABLE HasProperty (
     property_value   STRING,
     prop_context     STRING,
     certainty        DOUBLE DEFAULT 1.0,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -347,7 +373,7 @@ CREATE NODE TABLE Before (
     id               STRING PRIMARY KEY,
     gap_duration     STRING,
     confidence       DOUBLE DEFAULT 1.0,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -366,7 +392,7 @@ CREATE NODE TABLE After (
     id               STRING PRIMARY KEY,
     gap_duration     STRING,
     confidence       DOUBLE DEFAULT 1.0,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -385,7 +411,7 @@ CREATE NODE TABLE During (
     id               STRING PRIMARY KEY,
     overlap_type     STRING DEFAULT 'full',
     confidence       DOUBLE DEFAULT 1.0,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -406,7 +432,7 @@ CREATE NODE TABLE ValidFrom (
     id               STRING PRIMARY KEY,
     precision        STRING DEFAULT 'exact',
     confidence       DOUBLE DEFAULT 1.0,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -426,7 +452,7 @@ CREATE NODE TABLE ValidTo (
     precision        STRING DEFAULT 'exact',
     confidence       DOUBLE DEFAULT 1.0,
     termination      STRING,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -467,10 +493,10 @@ Derived from the ontology diagram — only semantically valid pairs:
 ### REL Table Declarations — 24 Total (2 per edge node type)
 
 ```cypher
--- ─────────────────────────────────────────────────
--- Contains
--- Memory/Event/Fact/Time → Contains → Memory/Event/Fact/Entity/Time
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// Contains
+// Memory/Event/Fact/Time → Contains → Memory/Event/Fact/Entity/Time
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_Contains (
     FROM Memory | Event | Fact | Time
     TO Contains,
@@ -482,10 +508,10 @@ CREATE REL TABLE TO_Contains (
     role STRING DEFAULT 'target'
 );
 
--- ─────────────────────────────────────────────────
--- LeadsTo
--- Event/Memory/Fact → LeadsTo → Event/Memory/Fact/AbstractTime
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// LeadsTo
+// Event/Memory/Fact → LeadsTo → Event/Memory/Fact/AbstractTime
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_LeadsTo (
     FROM Event | Memory | Fact
     TO LeadsTo,
@@ -497,10 +523,10 @@ CREATE REL TABLE TO_LeadsTo (
     role STRING DEFAULT 'target'
 );
 
--- ─────────────────────────────────────────────────
--- Prevents
--- Event/Fact → Prevents → Event/Fact/Memory
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// Prevents
+// Event/Fact → Prevents → Event/Fact/Memory
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_Prevents (
     FROM Event | Fact
     TO Prevents,
@@ -512,10 +538,10 @@ CREATE REL TABLE TO_Prevents (
     role STRING DEFAULT 'target'
 );
 
--- ─────────────────────────────────────────────────
--- Causes
--- Event/Fact → Causes → Event/Fact/Memory
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// Causes
+// Event/Fact → Causes → Event/Fact/Memory
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_Causes (
     FROM Event | Fact
     TO Causes,
@@ -527,10 +553,10 @@ CREATE REL TABLE TO_Causes (
     role STRING DEFAULT 'target'
 );
 
--- ─────────────────────────────────────────────────
--- BecauseOf
--- Event/Fact/Memory → BecauseOf → Event/Fact
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// BecauseOf
+// Event/Fact/Memory → BecauseOf → Event/Fact
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_BecauseOf (
     FROM Event | Fact | Memory
     TO BecauseOf,
@@ -542,10 +568,10 @@ CREATE REL TABLE TO_BecauseOf (
     role STRING DEFAULT 'target'
 );
 
--- ─────────────────────────────────────────────────
--- Similar
--- Entity/Fact/Event/Memory → Similar → Entity/Fact/Event/Memory
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// Similar
+// Entity/Fact/Event/Memory → Similar → Entity/Fact/Event/Memory
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_Similar (
     FROM Entity | Fact | Event | Memory
     TO Similar,
@@ -557,10 +583,10 @@ CREATE REL TABLE TO_Similar (
     role STRING DEFAULT 'target'
 );
 
--- ─────────────────────────────────────────────────
--- HasProperty
--- Entity/Fact/Event/Memory → HasProperty → Entity
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// HasProperty
+// Entity/Fact/Event/Memory → HasProperty → Entity
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_HasProperty (
     FROM Entity | Fact | Event | Memory
     TO HasProperty,
@@ -572,10 +598,10 @@ CREATE REL TABLE TO_HasProperty (
     role STRING DEFAULT 'target'
 );
 
--- ─────────────────────────────────────────────────
--- Before
--- Event/Memory/Time/AbstractTime → Before → Event/Memory/Time/AbstractTime
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// Before
+// Event/Memory/Time/AbstractTime → Before → Event/Memory/Time/AbstractTime
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_Before (
     FROM Event | Memory | Time | AbstractTime
     TO Before,
@@ -587,10 +613,10 @@ CREATE REL TABLE TO_Before (
     role STRING DEFAULT 'target'
 );
 
--- ─────────────────────────────────────────────────
--- After
--- Event/Memory/Time/AbstractTime → After → Event/Memory/Time/AbstractTime
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// After
+// Event/Memory/Time/AbstractTime → After → Event/Memory/Time/AbstractTime
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_After (
     FROM Event | Memory | Time | AbstractTime
     TO After,
@@ -602,10 +628,10 @@ CREATE REL TABLE TO_After (
     role STRING DEFAULT 'target'
 );
 
--- ─────────────────────────────────────────────────
--- During
--- Event/Memory → During → Event/Memory/Time
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// During
+// Event/Memory → During → Event/Memory/Time
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_During (
     FROM Event | Memory
     TO During,
@@ -617,10 +643,10 @@ CREATE REL TABLE TO_During (
     role STRING DEFAULT 'target'
 );
 
--- ─────────────────────────────────────────────────
--- ValidFrom
--- Fact/Event/Memory → ValidFrom → Time/AbstractTime
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// ValidFrom
+// Fact/Event/Memory → ValidFrom → Time/AbstractTime
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_ValidFrom (
     FROM Fact | Event | Memory
     TO ValidFrom,
@@ -632,10 +658,10 @@ CREATE REL TABLE TO_ValidFrom (
     role STRING DEFAULT 'target'
 );
 
--- ─────────────────────────────────────────────────
--- ValidTo
--- Fact/Event/Memory → ValidTo → Time/AbstractTime
--- ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────
+// ValidTo
+// Fact/Event/Memory → ValidTo → Time/AbstractTime
+// ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_ValidTo (
     FROM Fact | Event | Memory
     TO ValidTo,
@@ -672,7 +698,7 @@ CREATE REL TABLE TIME_HIERARCHY (FROM Time TO Time, ONE_TO_MANY);
 ### Create nodes
 
 ```cypher
--- Entity
+// Entity
 CREATE (:Entity {
     id: 'e-berlin',
     label: 'Berlin', label_resolved: 'Berlin, Germany',
@@ -682,7 +708,7 @@ CREATE (:Entity {
     layer: 1, context: 'European capital city'
 });
 
--- Time
+// Time
 CREATE (:Time {
     id: 't-2024-03',
     granularity: 'month',
@@ -693,7 +719,7 @@ CREATE (:Time {
     layer: 1, context: 'calendar month'
 });
 
--- AbstractTime
+// AbstractTime
 CREATE (:AbstractTime {
     id: 'at-future',
     semantics: 'unbounded forward',
@@ -703,7 +729,7 @@ CREATE (:AbstractTime {
     layer: 1, context: 'abstract temporal marker'
 });
 
--- Event
+// Event
 CREATE (:Event {
     id: 'ev-moved',
     predicate: 'relocation',
@@ -715,7 +741,7 @@ CREATE (:Event {
     layer: 3, context: 'Career relocation'
 });
 
--- Memory
+// Memory
 CREATE (:Memory {
     id: 'm-berlin',
     predicate: 'life_chapter',
@@ -801,8 +827,8 @@ CREATE (:HasProperty {
 
 MATCH (b:Entity {id: 'e-berlin'}), (hp:HasProperty {id: 'hp-01'})
 CREATE (b)-[:FROM_HasProperty {role: 'owner'}]->(hp);
--- HasProperty target is optional (property is self-contained in node)
--- Or point to a value entity if property_value is itself an entity
+// HasProperty target is optional (property is self-contained in node)
+// Or point to a value entity if property_value is itself an entity
 ```
 
 ---
@@ -845,23 +871,23 @@ WITH (metric = 'cosine', m = 16, ef_construction = 200, ef_search = 100);
 ### Query: Semantic Search by Layer
 
 ```cypher
--- Search memories
+// Search memories
 CALL vector_search(Memory, 'idx_memory_embedding', $query_embedding, 10)
 RETURN node.label_resolved, node.significance, node.emotions, node.context;
 
--- Search events, then traverse to temporal anchors
+// Search events, then traverse to temporal anchors
 CALL vector_search(Event, 'idx_event_embedding', $query_embedding, 5)
 WITH node AS ev
 MATCH (ev)-[:FROM_ValidFrom]->(vf:ValidFrom)-[:TO_ValidFrom]->(t:Time)
 RETURN ev.label_resolved, ev.status, t.label_resolved, vf.precision;
 
--- Search facts, then expand to related entities
+// Search facts, then expand to related entities
 CALL vector_search(Fact, 'idx_fact_embedding', $query_embedding, 5)
 WITH node AS f
 MATCH (f)-[:FROM_Contains]->(c:Contains)-[:TO_Contains]->(e:Entity)
 RETURN f.label_resolved, f.predicate, e.label_resolved;
 
--- Search entities, then find containing facts/events
+// Search entities, then find containing facts/events
 CALL vector_search(Entity, 'idx_entity_embedding', $query_embedding, 5)
 WITH node AS e
 MATCH (e)<-[:TO_Contains]-(c:Contains)<-[:FROM_Contains]-(f:Fact)

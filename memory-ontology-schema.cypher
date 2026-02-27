@@ -1,17 +1,17 @@
--- ============================================================================
--- Memory Ontology — Kùzu Cypher Schema
--- Bipartite Graph with Dedicated Typed Edge Nodes
--- Semantic Spacetime + FIRE-inspired Memory Ontology
--- ============================================================================
+// ============================================================================
+// Memory Ontology — Kùzu Cypher Schema
+// Bipartite Graph with Dedicated Typed Edge Nodes
+// Semantic Spacetime + FIRE-inspired Memory Ontology
+// ============================================================================
 
 
--- ============================================================================
--- ENTITY NODE TABLES
--- ============================================================================
+// ============================================================================
+// ENTITY NODE TABLES
+// ============================================================================
 
 CREATE NODE TABLE Entity (
     id               STRING PRIMARY KEY,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     label_embedding  FLOAT[518],
@@ -28,7 +28,7 @@ CREATE NODE TABLE Time (
     granularity      STRING,
     starts_at        TIMESTAMP,
     ends_at          TIMESTAMP,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -42,7 +42,7 @@ CREATE NODE TABLE Time (
 CREATE NODE TABLE AbstractTime (
     id               STRING PRIMARY KEY,
     semantics        STRING,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -58,7 +58,7 @@ CREATE NODE TABLE Fact (
     predicate        STRING,
     certainty        DOUBLE DEFAULT 1.0,
     source           STRING,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     label_embedding  FLOAT[518],
@@ -77,7 +77,7 @@ CREATE NODE TABLE Event (
     source           STRING,
     status           STRING DEFAULT 'occurred',
     is_ongoing       BOOLEAN DEFAULT FALSE,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     label_embedding  FLOAT[518],
@@ -99,7 +99,7 @@ CREATE NODE TABLE Memory (
     significance     STRING,
     emotions         STRING[],
     reflection       STRING,
-    -- universal
+    // universal
     label            STRING,
     label_resolved   STRING,
     label_embedding  FLOAT[518],
@@ -112,11 +112,11 @@ CREATE NODE TABLE Memory (
 );
 
 
--- ============================================================================
--- EDGE NODE TABLES (dedicated typed relation nodes)
--- ============================================================================
+// ============================================================================
+// EDGE NODE TABLES (dedicated typed relation nodes)
+// ============================================================================
 
--- Spacetime
+// Spacetime
 CREATE NODE TABLE Contains (
     id               STRING PRIMARY KEY,
     containment_type STRING,
@@ -162,7 +162,7 @@ CREATE NODE TABLE HasProperty (
     context          STRING
 );
 
--- Causal
+// Causal
 CREATE NODE TABLE LeadsTo (
     id               STRING PRIMARY KEY,
     probability      DOUBLE DEFAULT 1.0,
@@ -224,7 +224,7 @@ CREATE NODE TABLE BecauseOf (
     context          STRING
 );
 
--- Temporal
+// Temporal
 CREATE NODE TABLE Before (
     id               STRING PRIMARY KEY,
     gap_duration     STRING,
@@ -267,7 +267,7 @@ CREATE NODE TABLE During (
     context          STRING
 );
 
--- Validity
+// Validity
 CREATE NODE TABLE ValidFrom (
     id               STRING PRIMARY KEY,
     precision        STRING DEFAULT 'exact',
@@ -298,65 +298,65 @@ CREATE NODE TABLE ValidTo (
 );
 
 
--- ============================================================================
--- POLYMORPHIC REL TABLES (bipartite wiring)
--- ============================================================================
+// ============================================================================
+// POLYMORPHIC REL TABLES (bipartite wiring)
+// ============================================================================
 
--- Contains
+// Contains
 CREATE REL TABLE FROM_Contains (FROM Memory | Event | Fact | Time TO Contains, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_Contains (FROM Contains TO Memory | Event | Fact | Entity | Time, role STRING DEFAULT 'target');
 
--- LeadsTo
+// LeadsTo
 CREATE REL TABLE FROM_LeadsTo (FROM Event | Memory | Fact TO LeadsTo, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_LeadsTo (FROM LeadsTo TO Event | Memory | Fact | AbstractTime, role STRING DEFAULT 'target');
 
--- Prevents
+// Prevents
 CREATE REL TABLE FROM_Prevents (FROM Event | Fact TO Prevents, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_Prevents (FROM Prevents TO Event | Fact | Memory, role STRING DEFAULT 'target');
 
--- Causes
+// Causes
 CREATE REL TABLE FROM_Causes (FROM Event | Fact TO Causes, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_Causes (FROM Causes TO Event | Fact | Memory, role STRING DEFAULT 'target');
 
--- BecauseOf
+// BecauseOf
 CREATE REL TABLE FROM_BecauseOf (FROM Event | Fact | Memory TO BecauseOf, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_BecauseOf (FROM BecauseOf TO Event | Fact, role STRING DEFAULT 'target');
 
--- Similar
+// Similar
 CREATE REL TABLE FROM_Similar (FROM Entity | Fact | Event | Memory TO Similar, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_Similar (FROM Similar TO Entity | Fact | Event | Memory, role STRING DEFAULT 'target');
 
--- HasProperty
+// HasProperty
 CREATE REL TABLE FROM_HasProperty (FROM Entity | Fact | Event | Memory TO HasProperty, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_HasProperty (FROM HasProperty TO Entity, role STRING DEFAULT 'target');
 
--- Before
+// Before
 CREATE REL TABLE FROM_Before (FROM Event | Memory | Time | AbstractTime TO Before, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_Before (FROM Before TO Event | Memory | Time | AbstractTime, role STRING DEFAULT 'target');
 
--- After
+// After
 CREATE REL TABLE FROM_After (FROM Event | Memory | Time | AbstractTime TO After, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_After (FROM After TO Event | Memory | Time | AbstractTime, role STRING DEFAULT 'target');
 
--- During
+// During
 CREATE REL TABLE FROM_During (FROM Event | Memory TO During, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_During (FROM During TO Event | Memory | Time, role STRING DEFAULT 'target');
 
--- ValidFrom
+// ValidFrom
 CREATE REL TABLE FROM_ValidFrom (FROM Fact | Event | Memory TO ValidFrom, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_ValidFrom (FROM ValidFrom TO Time | AbstractTime, role STRING DEFAULT 'target');
 
--- ValidTo
+// ValidTo
 CREATE REL TABLE FROM_ValidTo (FROM Fact | Event | Memory TO ValidTo, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_ValidTo (FROM ValidTo TO Time | AbstractTime, role STRING DEFAULT 'target');
 
--- Time Tree
+// Time Tree
 CREATE REL TABLE TIME_HIERARCHY (FROM Time TO Time, ONE_TO_MANY);
 
 
--- ============================================================================
--- VECTOR INDEXES
--- ============================================================================
+// ============================================================================
+// VECTOR INDEXES
+// ============================================================================
 
 CREATE VECTOR INDEX idx_entity_embedding ON Entity(label_embedding)
 USING HNSW WITH (metric = 'cosine', m = 16, ef_construction = 200, ef_search = 100);
