@@ -1,0 +1,227 @@
+---
+title: Memory Ontology — Bipartite Graph
+---
+graph TB
+    %% ════════════════════════════════════════
+    %% ENTITY NODES (Layer 1–4)
+    %% ════════════════════════════════════════
+
+    Entity["🔵 Entity<br/><i>layer 1</i>"]
+    Time["🟢 Time<br/><i>layer 1</i>"]
+    AbstractTime["🟢 AbstractTime<br/><i>layer 1</i>"]
+    Fact["🟡 Fact<br/><i>layer 2</i>"]
+    Event["🟠 Event<br/><i>layer 3</i>"]
+    Memory["🔴 Memory<br/><i>layer 4</i>"]
+
+    %% ════════════════════════════════════════
+    %% INHERITANCE (dashed, no edge nodes)
+    %% ════════════════════════════════════════
+
+    Entity -..->|inherits| Time
+    Entity -..->|inherits| Fact
+    Entity -..->|inherits| Event
+    Entity -..->|inherits| Memory
+    Time -..->|inherits| AbstractTime
+    Fact -..->|inherits| Event
+    Event -..->|inherits| Memory
+
+    %% ════════════════════════════════════════
+    %% EDGE NODES — Spacetime (green)
+    %% ════════════════════════════════════════
+
+    Contains{{"⬡ Contains<br/><small>containment_type, weight</small>"}}
+    Similar{{"⬡ Similar<br/><small>similarity, sim_context</small>"}}
+    HasProperty{{"⬡ HasProperty<br/><small>property_name, property_value</small>"}}
+
+    %% ════════════════════════════════════════
+    %% EDGE NODES — Causal (orange)
+    %% ════════════════════════════════════════
+
+    LeadsTo{{"⬡ LeadsTo<br/><small>probability, strength</small>"}}
+    Prevents{{"⬡ Prevents<br/><small>probability, mechanism</small>"}}
+    Causes{{"⬡ Causes<br/><small>probability, directness</small>"}}
+    BecauseOf{{"⬡ BecauseOf<br/><small>probability, explanation</small>"}}
+
+    %% ════════════════════════════════════════
+    %% EDGE NODES — Temporal (blue)
+    %% ════════════════════════════════════════
+
+    Before{{"⬡ Before<br/><small>gap_duration, confidence</small>"}}
+    After{{"⬡ After<br/><small>gap_duration, confidence</small>"}}
+    During{{"⬡ During<br/><small>overlap_type, confidence</small>"}}
+
+    %% ════════════════════════════════════════
+    %% EDGE NODES — Validity (purple)
+    %% ════════════════════════════════════════
+
+    ValidFrom{{"⬡ ValidFrom<br/><small>precision, confidence</small>"}}
+    ValidTo{{"⬡ ValidTo<br/><small>precision, termination</small>"}}
+
+    %% ════════════════════════════════════════
+    %% BIPARTITE WIRING: Contains
+    %% Memory/Event/Fact/Time → Contains → Memory/Event/Fact/Entity/Time
+    %% ════════════════════════════════════════
+
+    Memory -->|FROM| Contains
+    Event -->|FROM| Contains
+    Fact -->|FROM| Contains
+    Time -->|FROM| Contains
+    Contains -->|TO| Memory
+    Contains -->|TO| Event
+    Contains -->|TO| Fact
+    Contains -->|TO| Entity
+    Contains -->|TO| Time
+
+    %% ════════════════════════════════════════
+    %% BIPARTITE WIRING: LeadsTo
+    %% Event/Memory/Fact → LeadsTo → Event/Memory/Fact/AbstractTime
+    %% ════════════════════════════════════════
+
+    Event -->|FROM| LeadsTo
+    Memory -->|FROM| LeadsTo
+    Fact -->|FROM| LeadsTo
+    LeadsTo -->|TO| Event
+    LeadsTo -->|TO| Memory
+    LeadsTo -->|TO| Fact
+    LeadsTo -->|TO| AbstractTime
+
+    %% ════════════════════════════════════════
+    %% BIPARTITE WIRING: Prevents
+    %% Event/Fact → Prevents → Event/Fact/Memory
+    %% ════════════════════════════════════════
+
+    Event -->|FROM| Prevents
+    Fact -->|FROM| Prevents
+    Prevents -->|TO| Event
+    Prevents -->|TO| Fact
+    Prevents -->|TO| Memory
+
+    %% ════════════════════════════════════════
+    %% BIPARTITE WIRING: Causes
+    %% Event/Fact → Causes → Event/Fact/Memory
+    %% ════════════════════════════════════════
+
+    Event -->|FROM| Causes
+    Fact -->|FROM| Causes
+    Causes -->|TO| Event
+    Causes -->|TO| Fact
+    Causes -->|TO| Memory
+
+    %% ════════════════════════════════════════
+    %% BIPARTITE WIRING: BecauseOf
+    %% Event/Fact/Memory → BecauseOf → Event/Fact
+    %% ════════════════════════════════════════
+
+    Event -->|FROM| BecauseOf
+    Fact -->|FROM| BecauseOf
+    Memory -->|FROM| BecauseOf
+    BecauseOf -->|TO| Event
+    BecauseOf -->|TO| Fact
+
+    %% ════════════════════════════════════════
+    %% BIPARTITE WIRING: Similar
+    %% Entity/Fact/Event/Memory ↔ Similar ↔ Entity/Fact/Event/Memory
+    %% ════════════════════════════════════════
+
+    Entity -->|FROM| Similar
+    Fact -->|FROM| Similar
+    Event -->|FROM| Similar
+    Memory -->|FROM| Similar
+    Similar -->|TO| Entity
+    Similar -->|TO| Fact
+    Similar -->|TO| Event
+    Similar -->|TO| Memory
+
+    %% ════════════════════════════════════════
+    %% BIPARTITE WIRING: HasProperty
+    %% Entity/Fact/Event/Memory → HasProperty → Entity
+    %% ════════════════════════════════════════
+
+    Entity -->|FROM| HasProperty
+    Fact -->|FROM| HasProperty
+    Event -->|FROM| HasProperty
+    Memory -->|FROM| HasProperty
+    HasProperty -->|TO| Entity
+
+    %% ════════════════════════════════════════
+    %% BIPARTITE WIRING: Before / After
+    %% Event/Memory/Time/AbstractTime ↔ Before/After ↔ same
+    %% ════════════════════════════════════════
+
+    Event -->|FROM| Before
+    Memory -->|FROM| Before
+    Time -->|FROM| Before
+    AbstractTime -->|FROM| Before
+    Before -->|TO| Event
+    Before -->|TO| Memory
+    Before -->|TO| Time
+    Before -->|TO| AbstractTime
+
+    Event -->|FROM| After
+    Memory -->|FROM| After
+    Time -->|FROM| After
+    AbstractTime -->|FROM| After
+    After -->|TO| Event
+    After -->|TO| Memory
+    After -->|TO| Time
+    After -->|TO| AbstractTime
+
+    %% ════════════════════════════════════════
+    %% BIPARTITE WIRING: During
+    %% Event/Memory → During → Event/Memory/Time
+    %% ════════════════════════════════════════
+
+    Event -->|FROM| During
+    Memory -->|FROM| During
+    During -->|TO| Event
+    During -->|TO| Memory
+    During -->|TO| Time
+
+    %% ════════════════════════════════════════
+    %% BIPARTITE WIRING: ValidFrom / ValidTo
+    %% Fact/Event/Memory → ValidFrom/ValidTo → Time/AbstractTime
+    %% ════════════════════════════════════════
+
+    Fact -->|FROM| ValidFrom
+    Event -->|FROM| ValidFrom
+    Memory -->|FROM| ValidFrom
+    ValidFrom -->|TO| Time
+    ValidFrom -->|TO| AbstractTime
+
+    Fact -->|FROM| ValidTo
+    Event -->|FROM| ValidTo
+    Memory -->|FROM| ValidTo
+    ValidTo -->|TO| Time
+    ValidTo -->|TO| AbstractTime
+
+    %% ════════════════════════════════════════
+    %% TIME TREE (direct, not bipartite)
+    %% ════════════════════════════════════════
+
+    Time ==>|TIME_HIERARCHY| Time
+
+    %% ════════════════════════════════════════
+    %% STYLES
+    %% ════════════════════════════════════════
+
+    classDef entityNode fill:#4A90D9,stroke:#2C5F8A,color:#fff,font-weight:bold
+    classDef timeNode fill:#27AE60,stroke:#1E8449,color:#fff,font-weight:bold
+    classDef factNode fill:#F1C40F,stroke:#D4AC0D,color:#333,font-weight:bold
+    classDef eventNode fill:#E67E22,stroke:#CA6F1E,color:#fff,font-weight:bold
+    classDef memoryNode fill:#E74C3C,stroke:#CB4335,color:#fff,font-weight:bold
+
+    classDef spacetimeEdge fill:#2ECC71,stroke:#27AE60,color:#333
+    classDef causalEdge fill:#F39C12,stroke:#E67E22,color:#333
+    classDef temporalEdge fill:#3498DB,stroke:#2980B9,color:#fff
+    classDef validityEdge fill:#9B59B6,stroke:#8E44AD,color:#fff
+
+    class Entity entityNode
+    class Time,AbstractTime timeNode
+    class Fact factNode
+    class Event eventNode
+    class Memory memoryNode
+
+    class Contains,Similar,HasProperty spacetimeEdge
+    class LeadsTo,Prevents,Causes,BecauseOf causalEdge
+    class Before,After,During temporalEdge
+    class ValidFrom,ValidTo validityEdge
