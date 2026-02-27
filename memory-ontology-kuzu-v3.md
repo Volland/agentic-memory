@@ -8,7 +8,7 @@ Semantic Spacetime + FARO-inspired Memory Ontology
 
 Simplified ontology view 
 
-![](memory-ontology-biparty.png)
+![](memory-ontology.png)
 
 ---
 
