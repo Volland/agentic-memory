@@ -3,13 +3,20 @@
 **Bipartite Graph with Dedicated Typed Edge Nodes**
 Semantic Spacetime + FARO-inspired Memory Ontology
 
+![](memory-ontology-biparty.png)
+
+
+Simplified ontology view 
+
+![](memory-ontology-biparty.png)
+
 ---
 
 ## Design Principles
 
 1. Every concept is a node — entities never connect directly
 2. Dedicated typed edge node tables with domain-specific properties
-3. **Polymorphic REL tables** — one `FROM_*` and one `TO_*` per edge node type, listing all valid source/target entity tables
+3. **Polymorphic REL tables** — one `FROM` and one `TO` per edge node type, listing all valid source/target entity tables
 4. Relation constraints derived from the ontology diagram — only semantically valid pairs are wired
 5. Every node carries universal columns: label, labelResolved, labelEmbedding[518], temporal block, layer, context
 
