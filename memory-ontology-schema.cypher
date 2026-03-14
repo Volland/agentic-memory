@@ -113,6 +113,53 @@ CREATE NODE TABLE Memory (
 
 
 // ============================================================================
+// CONVERSATIONAL NODE TABLES (DuckDB-projected, layer = -1)
+// ============================================================================
+
+// DuckDB source tables are attached via:
+//   ATTACH 'memory.duckdb' AS duck (dbtype duckdb);
+// These Kùzu node tables project from DuckDB relational storage.
+
+CREATE NODE TABLE Conversation (
+    id               STRING PRIMARY KEY,
+    title            STRING,
+    started_at       TIMESTAMP,
+    ended_at         TIMESTAMP,
+    participant      STRING,
+    model            STRING,
+    summary          STRING,
+    tags             STRING[],
+    label            STRING,
+    label_resolved   STRING,
+    learned_at       TIMESTAMP,
+    expire_at        TIMESTAMP,
+    created_at       TIMESTAMP,
+    updated_at       TIMESTAMP,
+    layer            INT16 DEFAULT -1,
+    context          STRING
+);
+
+CREATE NODE TABLE Message (
+    id               STRING PRIMARY KEY,
+    conversation_id  STRING,
+    role             STRING,
+    content          STRING,
+    content_embedding FLOAT[518],
+    token_count      INT32,
+    message_index    INT32,
+    parent_message_id STRING,
+    label            STRING,
+    label_resolved   STRING,
+    learned_at       TIMESTAMP,
+    expire_at        TIMESTAMP,
+    created_at       TIMESTAMP,
+    updated_at       TIMESTAMP,
+    layer            INT16 DEFAULT -1,
+    context          STRING
+);
+
+
+// ============================================================================
 // EDGE NODE TABLES (dedicated typed relation nodes)
 // ============================================================================
 
@@ -121,6 +168,22 @@ CREATE NODE TABLE Contains (
     id               STRING PRIMARY KEY,
     containment_type STRING,
     weight           DOUBLE DEFAULT 1.0,
+    label            STRING,
+    label_resolved   STRING,
+    learned_at       TIMESTAMP,
+    expire_at        TIMESTAMP,
+    created_at       TIMESTAMP,
+    updated_at       TIMESTAMP,
+    layer            INT16 DEFAULT 0,
+    context          STRING
+);
+
+// Provenance
+CREATE NODE TABLE Source (
+    id               STRING PRIMARY KEY,
+    extraction_method STRING,
+    confidence       DOUBLE DEFAULT 1.0,
+    fragment         STRING,
     label            STRING,
     label_resolved   STRING,
     learned_at       TIMESTAMP,
@@ -303,8 +366,12 @@ CREATE NODE TABLE ValidTo (
 // ============================================================================
 
 // Contains
-CREATE REL TABLE FROM_Contains (FROM Memory | Event | Fact | Time TO Contains, role STRING DEFAULT 'source');
-CREATE REL TABLE TO_Contains (FROM Contains TO Memory | Event | Fact | Entity | Time, role STRING DEFAULT 'target');
+CREATE REL TABLE FROM_Contains (FROM Conversation | Message | Memory | Event | Fact | Time TO Contains, role STRING DEFAULT 'source');
+CREATE REL TABLE TO_Contains (FROM Contains TO Message | Memory | Event | Fact | Entity | Time, role STRING DEFAULT 'target');
+
+// Source (provenance)
+CREATE REL TABLE FROM_Source (FROM Entity | Fact | Event | Memory TO Source, role STRING DEFAULT 'subject');
+CREATE REL TABLE TO_Source (FROM Source TO Message, role STRING DEFAULT 'origin');
 
 // LeadsTo
 CREATE REL TABLE FROM_LeadsTo (FROM Event | Memory | Fact TO LeadsTo, role STRING DEFAULT 'source');
@@ -353,6 +420,12 @@ CREATE REL TABLE TO_ValidTo (FROM ValidTo TO Time | AbstractTime, role STRING DE
 // Time Tree
 CREATE REL TABLE TIME_HIERARCHY (FROM Time TO Time, ONE_TO_MANY);
 
+// Conversation → Message (structural)
+CREATE REL TABLE CONVERSATION_MESSAGES (FROM Conversation TO Message, ONE_TO_MANY);
+
+// Message threading (branching conversations)
+CREATE REL TABLE MESSAGE_REPLY (FROM Message TO Message, ONE_TO_MANY);
+
 
 // ============================================================================
 // VECTOR INDEXES
@@ -368,4 +441,7 @@ CREATE VECTOR INDEX idx_event_embedding ON Event(label_embedding)
 USING HNSW WITH (metric = 'cosine', m = 16, ef_construction = 200, ef_search = 100);
 
 CREATE VECTOR INDEX idx_memory_embedding ON Memory(label_embedding)
+USING HNSW WITH (metric = 'cosine', m = 16, ef_construction = 200, ef_search = 100);
+
+CREATE VECTOR INDEX idx_message_embedding ON Message(content_embedding)
 USING HNSW WITH (metric = 'cosine', m = 16, ef_construction = 200, ef_search = 100);

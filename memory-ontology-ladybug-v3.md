@@ -19,6 +19,7 @@ Simplified ontology view
 3. **Polymorphic REL tables** — one `FROM` and one `TO` per edge node type, listing all valid source/target entity tables
 4. Relation constraints derived from the ontology diagram — only semantically valid pairs are wired
 5. Every node carries universal columns: label, labelResolved, labelEmbedding[518], temporal block, layer, context
+6. **Dual-storage**: Conversations and messages live in DuckDB (relational) and are projected into the graph as node tables — enabling both efficient relational queries and graph traversal
 
 ---
 
@@ -35,6 +36,15 @@ Entity
               └── Memory
 ```
 
+### Conversational Nodes (DuckDB-projected, layer = -1)
+
+```
+Conversation
+  └── Message
+```
+
+These live as relational tables in DuckDB and are projected into Kùzu as node tables via `ATTACH`. They sit below the entity layer (layer = -1) as raw observational data from which entities, facts, events, and memories are extracted.
+
 ### Relation Nodes (Edge Node Tables, layer = 0)
 
 All relation nodes share the universal columns. Grouped by semantic category:
@@ -46,6 +56,8 @@ RelationNode  (universal: label, label_resolved, learned_at, expire_at, created_
   │     ├── Similar       (similarity, sim_context, sim_method)
   |     ├── LeadsTo       (probability, strength, mechanism)
   │     └── HasProperty   (property_name, property_value, prop_context, certainty)
+  ├── Provenance
+  │     └── Source        (extraction_method, confidence, fragment)
   ├── Causal
   │     ├── Prevents      (probability, strength, mechanism)
   │     ├── Causes        (probability, strength, mechanism, directness)
@@ -214,17 +226,142 @@ CREATE NODE TABLE Memory (
 
 ---
 
+## Part 1b: Conversational Layer — DuckDB Tables Projected as Node Tables
+
+Conversations and messages are the raw observational substrate from which knowledge (entities, facts, events, memories) is extracted. They live as **relational tables in DuckDB** for efficient append, pagination, and full-text search, and are **projected into Kùzu as node tables** so they participate in graph traversal.
+
+### DuckDB Schema
+
+```sql
+-- DuckDB relational tables (source of truth for conversational data)
+
+CREATE TABLE conversations (
+    id               VARCHAR PRIMARY KEY,
+    title            VARCHAR,
+    started_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ended_at         TIMESTAMP,
+    participant      VARCHAR,              -- 'user'|'assistant'|'pair'|'group'
+    model            VARCHAR,              -- LLM model identifier
+    summary          VARCHAR,
+    tags             VARCHAR[],
+    created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE messages (
+    id               VARCHAR PRIMARY KEY,
+    conversation_id  VARCHAR NOT NULL REFERENCES conversations(id),
+    role             VARCHAR NOT NULL,     -- 'user'|'assistant'|'system'|'tool'
+    content          VARCHAR NOT NULL,
+    content_embedding FLOAT[518],          -- embedding for semantic search over messages
+    token_count      INTEGER,
+    message_index    INTEGER NOT NULL,     -- ordering within conversation
+    parent_message_id VARCHAR,             -- for branching conversations
+    created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for common access patterns
+CREATE INDEX idx_messages_conversation ON messages(conversation_id, message_index);
+CREATE INDEX idx_messages_role ON messages(conversation_id, role);
+CREATE INDEX idx_conversations_time ON conversations(started_at DESC);
+```
+
+### Kùzu Projection — Attach and Project as Node Tables
+
+```cypher
+// Attach the DuckDB database
+ATTACH 'memory.duckdb' AS duck (dbtype duckdb);
+
+// Project DuckDB tables as Kùzu node tables
+CREATE NODE TABLE Conversation (
+    id               STRING PRIMARY KEY,
+    title            STRING,
+    started_at       TIMESTAMP,
+    ended_at         TIMESTAMP,
+    participant      STRING,
+    model            STRING,
+    summary          STRING,
+    tags             STRING[],
+    // universal
+    label            STRING,
+    label_resolved   STRING,
+    learned_at       TIMESTAMP,
+    expire_at        TIMESTAMP,
+    created_at       TIMESTAMP,
+    updated_at       TIMESTAMP,
+    layer            INT16 DEFAULT -1,
+    context          STRING
+);
+
+CREATE NODE TABLE Message (
+    id               STRING PRIMARY KEY,
+    conversation_id  STRING,
+    role             STRING,
+    content          STRING,
+    content_embedding FLOAT[518],
+    token_count      INT32,
+    message_index    INT32,
+    parent_message_id STRING,
+    // universal
+    label            STRING,
+    label_resolved   STRING,
+    learned_at       TIMESTAMP,
+    expire_at        TIMESTAMP,
+    created_at       TIMESTAMP,
+    updated_at       TIMESTAMP,
+    layer            INT16 DEFAULT -1,
+    context          STRING
+);
+```
+
+### Layer Semantics
+
+| Layer | Meaning | Tables |
+|-------|---------|--------|
+| **-1** | Raw conversational data (DuckDB-projected) | Conversation, Message |
+| **0** | Edge/relation nodes | Contains, Source, Similar, ... |
+| **1** | Entities and time | Entity, Time, AbstractTime |
+| **2** | Facts | Fact |
+| **3** | Events | Event |
+| **4** | Memories | Memory |
+
+Knowledge flows **upward**: messages (layer -1) are processed to extract entities (1), facts (2), events (3), and memories (4). The `Source` relation tracks this provenance chain.
+
+---
+
 ## Part 2: Dedicated Typed Edge Node Tables
 
 ### Contains — Compositional / Membership
 
-From ontology: Memory→{Event,Fact,Entity,Memory}, Event→{Fact,Entity,Event}, Fact→{Entity,Fact}, Time→Time
+From ontology: Conversation→Message, Message→{Entity,Fact,Event,Memory}, Memory→{Event,Fact,Entity,Memory}, Event→{Fact,Entity,Event}, Fact→{Entity,Fact}, Time→Time
 
 ```cypher
 CREATE NODE TABLE Contains (
     id               STRING PRIMARY KEY,
     containment_type STRING,              -- 'composition'|'membership'|'aggregation'|'part_of'
     weight           DOUBLE DEFAULT 1.0,
+    // universal
+    label            STRING,
+    label_resolved   STRING,
+    learned_at       TIMESTAMP,
+    expire_at        TIMESTAMP,
+    created_at       TIMESTAMP,
+    updated_at       TIMESTAMP,
+    layer            INT16 DEFAULT 0,
+    context          STRING
+);
+```
+
+### Source — Provenance Attribution
+
+From ontology: {Entity,Fact,Event,Memory}→Message. Tracks which message a piece of knowledge was extracted from. The edge points from the extracted knowledge back to its originating message.
+
+```cypher
+CREATE NODE TABLE Source (
+    id               STRING PRIMARY KEY,
+    extraction_method STRING,              -- 'llm'|'regex'|'ner'|'manual'|'tool'
+    confidence       DOUBLE DEFAULT 1.0,
+    fragment         STRING,               -- the relevant substring from the message
     // universal
     label            STRING,
     label_resolved   STRING,
@@ -484,7 +621,8 @@ Derived from the ontology diagram — only semantically valid pairs:
 
 | Edge Node | Valid Sources (FROM) | Valid Targets (TO) |
 |-----------|---------------------|--------------------|
-| **Contains** | Memory, Event, Fact, Time | Memory, Event, Fact, Entity, Time |
+| **Contains** | Conversation, Message, Memory, Event, Fact, Time | Message, Memory, Event, Fact, Entity, Time |
+| **Source** | Entity, Fact, Event, Memory | Message |
 | **LeadsTo** | Event, Memory, Fact | Event, Memory, Fact, AbstractTime |
 | **Prevents** | Event, Fact | Event, Fact, Memory |
 | **Causes** | Event, Fact | Event, Fact, Memory |
@@ -497,22 +635,37 @@ Derived from the ontology diagram — only semantically valid pairs:
 | **ValidFrom** | Fact, Event, Memory | Time, AbstractTime |
 | **ValidTo** | Fact, Event, Memory | Time, AbstractTime |
 
-### REL Table Declarations — 24 Total (2 per edge node type)
+### REL Table Declarations — 28 Total (2 per edge node type)
 
 ```cypher
 // ─────────────────────────────────────────────────
 // Contains
-// Memory/Event/Fact/Time → Contains → Memory/Event/Fact/Entity/Time
+// Conversation/Message/Memory/Event/Fact/Time → Contains → Message/Memory/Event/Fact/Entity/Time
 // ─────────────────────────────────────────────────
 CREATE REL TABLE FROM_Contains (
-    FROM Memory | Event | Fact | Time
+    FROM Conversation | Message | Memory | Event | Fact | Time
     TO Contains,
     role STRING DEFAULT 'source'
 );
 CREATE REL TABLE TO_Contains (
     FROM Contains
-    TO Memory | Event | Fact | Entity | Time,
+    TO Message | Memory | Event | Fact | Entity | Time,
     role STRING DEFAULT 'target'
+);
+
+// ─────────────────────────────────────────────────
+// Source — Provenance: extracted knowledge → originating message
+// Entity/Fact/Event/Memory → Source → Message
+// ─────────────────────────────────────────────────
+CREATE REL TABLE FROM_Source (
+    FROM Entity | Fact | Event | Memory
+    TO Source,
+    role STRING DEFAULT 'subject'
+);
+CREATE REL TABLE TO_Source (
+    FROM Source
+    TO Message,
+    role STRING DEFAULT 'origin'
 );
 
 // ─────────────────────────────────────────────────
@@ -687,6 +840,18 @@ CREATE REL TABLE TO_ValidTo (
 CREATE REL TABLE TIME_HIERARCHY (FROM Time TO Time, ONE_TO_MANY);
 ```
 
+### Conversation → Message (direct structural edge, not bipartite)
+
+```cypher
+CREATE REL TABLE CONVERSATION_MESSAGES (FROM Conversation TO Message, ONE_TO_MANY);
+```
+
+### Message Threading (direct structural edge for branching)
+
+```cypher
+CREATE REL TABLE MESSAGE_REPLY (FROM Message TO Message, ONE_TO_MANY);
+```
+
 ---
 
 ## Part 4: REL Table Count Comparison
@@ -694,9 +859,9 @@ CREATE REL TABLE TIME_HIERARCHY (FROM Time TO Time, ONE_TO_MANY);
 | Approach | REL Tables |
 |----------|-----------|
 | v2 — one REL per (entity type × edge type) pair | **~120** |
-| **v3 — polymorphic, 2 per edge type** | **25** (24 bipartite + 1 time tree) |
+| **v3 — polymorphic, 2 per edge type** | **29** (26 bipartite + 3 structural) |
 
-**~5× reduction** while preserving full ontological constraints.
+**~4× reduction** while preserving full ontological constraints and adding conversational provenance.
 
 ---
 
@@ -842,7 +1007,7 @@ CREATE (b)-[:FROM_HasProperty {role: 'owner'}]->(hp);
 
 ## Part 6: Vector Indexes
 
-HNSW vector indexes on the 4 content node tables that carry `label_embedding`. Relation/edge nodes and time nodes don't need semantic search — they are discovered by traversing from matched entity nodes.
+HNSW vector indexes on the 4 content node tables that carry `label_embedding`, plus the Message table with `content_embedding` for semantic search over conversational history. Relation/edge nodes and time nodes don't need semantic search — they are discovered by traversing from matched entity nodes.
 
 ```cypher
 CREATE VECTOR INDEX idx_entity_embedding
@@ -862,6 +1027,11 @@ WITH (metric = 'cosine', m = 16, ef_construction = 200, ef_search = 100);
 
 CREATE VECTOR INDEX idx_memory_embedding
 ON Memory(label_embedding)
+USING HNSW
+WITH (metric = 'cosine', m = 16, ef_construction = 200, ef_search = 100);
+
+CREATE VECTOR INDEX idx_message_embedding
+ON Message(content_embedding)
 USING HNSW
 WITH (metric = 'cosine', m = 16, ef_construction = 200, ef_search = 100);
 ```
@@ -901,7 +1071,7 @@ MATCH (e)<-[:TO_Contains]-(c:Contains)<-[:FROM_Contains]-(f:Fact)
 RETURN e.label_resolved, f.label_resolved, f.predicate;
 ```
 
-### Index Summary: 4 total
+### Index Summary: 5 total
 
 | Index | Table | Column |
 |-------|-------|--------|
@@ -909,6 +1079,7 @@ RETURN e.label_resolved, f.label_resolved, f.predicate;
 | `idx_fact_embedding` | Fact | `label_embedding` |
 | `idx_event_embedding` | Event | `label_embedding` |
 | `idx_memory_embedding` | Memory | `label_embedding` |
+| `idx_message_embedding` | Message | `content_embedding` |
 
 ---
 
@@ -980,30 +1151,77 @@ WHERE period.label_resolved = '2024'
 RETURN ev.label_resolved, d.overlap_type;
 ```
 
+### Conversation → Messages (structural)
+
+```cypher
+MATCH (c:Conversation)-[:CONVERSATION_MESSAGES]->(msg:Message)
+WHERE c.id = $conversation_id
+RETURN msg.role, msg.content, msg.message_index
+ORDER BY msg.message_index;
+```
+
+### Message → Extracted Entities (Contains)
+
+```cypher
+MATCH (msg:Message)-[:FROM_Contains]->(ct:Contains)-[:TO_Contains]->(e:Entity)
+WHERE msg.id = $message_id
+RETURN e.label_resolved, ct.containment_type, ct.weight;
+```
+
+### Provenance — Where Did This Fact Come From? (Source)
+
+```cypher
+MATCH (f:Fact)-[:FROM_Source]->(s:Source)-[:TO_Source]->(msg:Message)
+RETURN f.label_resolved, s.extraction_method, s.confidence, s.fragment,
+       msg.role, msg.content, msg.conversation_id;
+```
+
+### Provenance — All Knowledge Extracted from a Conversation
+
+```cypher
+MATCH (c:Conversation)-[:CONVERSATION_MESSAGES]->(msg:Message)
+      <-[:TO_Source]-(s:Source)<-[:FROM_Source]-(knowledge)
+WHERE c.id = $conversation_id
+RETURN labels(knowledge)[0] AS type, knowledge.label_resolved,
+       s.extraction_method, msg.message_index;
+```
+
+### Full Trace — Fact Back to Conversation Context
+
+```cypher
+MATCH (f:Fact)-[:FROM_Source]->(s:Source)-[:TO_Source]->(msg:Message)
+      -[:CONVERSATION_MESSAGES]-(conv:Conversation)
+MATCH (f)-[:FROM_Contains]->(ct:Contains)-[:TO_Contains]->(e:Entity)
+WHERE f.id = $fact_id
+RETURN conv.title, msg.message_index, msg.role, s.fragment,
+       e.label_resolved AS related_entity;
+```
+
 ---
 
 ## Summary
 
-### Node Tables: 6 Entity + 12 Edge = 18 total
+### Node Tables: 2 Conversational (DuckDB) + 6 Entity + 13 Edge = 21 total
 
-| Entity Nodes | Edge Nodes (Spacetime) | Edge Nodes (Causal) | Edge Nodes (Temporal) | Edge Nodes (Validity) |
-|---|---|---|---|---|
-| Entity | Contains | LeadsTo | Before | ValidFrom |
-| Time | Similar | Prevents | After | ValidTo |
-| AbstractTime | HasProperty | Causes | During | |
-| Fact | | BecauseOf | | |
-| Event | | | | |
-| Memory | | | | |
+| Conversational (DuckDB) | Entity Nodes | Edge Nodes (Spacetime) | Edge Nodes (Provenance) | Edge Nodes (Causal) | Edge Nodes (Temporal) | Edge Nodes (Validity) |
+|---|---|---|---|---|---|---|
+| Conversation | Entity | Contains | Source | LeadsTo | Before | ValidFrom |
+| Message | Time | Similar | | Prevents | After | ValidTo |
+| | AbstractTime | HasProperty | | Causes | During | |
+| | Fact | | | BecauseOf | | |
+| | Event | | | | | |
+| | Memory | | | | | |
 
-### REL Tables: 25 total
+### REL Tables: 29 total
 
-24 polymorphic bipartite (2 per edge node type) + 1 time tree hierarchy.
+26 polymorphic bipartite (2 per edge node type) + 3 structural (TIME_HIERARCHY, CONVERSATION_MESSAGES, MESSAGE_REPLY).
 
 ### Edge Node Catalog
 
 | Edge Node | Category | Key Properties | Sources → Targets |
 |-----------|----------|----------------|-------------------|
-| Contains | spacetime | containment_type, weight | Mem/Ev/Fact/Time → Mem/Ev/Fact/Ent/Time |
+| Contains | spacetime | containment_type, weight | Conv/Msg/Mem/Ev/Fact/Time → Msg/Mem/Ev/Fact/Ent/Time |
+| Source | provenance | extraction_method, confidence, fragment | Ent/Fact/Ev/Mem → Msg |
 | Similar | spacetime | similarity, sim_context, sim_method | Ent/Fact/Ev/Mem ↔ Ent/Fact/Ev/Mem |
 | HasProperty | spacetime | property_name, property_value, prop_context | Ent/Fact/Ev/Mem → Ent |
 | LeadsTo | causal | probability, strength, mechanism | Ev/Mem/Fact → Ev/Mem/Fact/AbsTime |
