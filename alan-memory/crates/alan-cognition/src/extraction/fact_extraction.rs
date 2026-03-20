@@ -20,6 +20,8 @@ struct LlmFact {
     predicate: String,
     subject_label: String,
     object_label: Option<String>,
+    #[serde(default)]
+    fact_type: Option<String>,
     certainty: Option<f64>,
     source_fragment: Option<String>,
 }
@@ -65,6 +67,7 @@ impl FactExtractionStep {
                 predicate: f.predicate,
                 subject_label: f.subject_label,
                 object_label: f.object_label,
+                fact_type: f.fact_type.unwrap_or_else(|| "encyclopedic".to_string()),
                 certainty: f.certainty.unwrap_or(0.5),
                 source_fragment: f.source_fragment.unwrap_or_default(),
                 source_message_id: None,

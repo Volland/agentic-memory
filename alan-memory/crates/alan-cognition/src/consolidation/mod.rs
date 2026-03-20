@@ -3,6 +3,8 @@ pub mod fact_merging;
 pub mod relation_wiring;
 pub mod similarity_detection;
 pub mod embedding_step;
+pub mod consolidation_decision;
+pub mod unified_process;
 pub mod prompt;
 
 use std::sync::Arc;

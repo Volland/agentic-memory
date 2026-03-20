@@ -23,6 +23,8 @@ struct LlmEntity {
     entity_type: Option<String>,
     confidence: Option<f64>,
     source_fragment: Option<String>,
+    #[serde(default)]
+    aliases: Vec<String>,
 }
 
 impl EntityExtractionStep {
@@ -48,6 +50,7 @@ impl EntityExtractionStep {
                             entity_type: Some(span.entity_type.clone()),
                             confidence: span.confidence,
                             source_fragment: span.text,
+                            aliases: Vec::new(),
                             source_message_id: None,
                             extraction_method: "ner".to_string(),
                         });
@@ -84,6 +87,7 @@ impl EntityExtractionStep {
                 entity_type: e.entity_type,
                 confidence: e.confidence.unwrap_or(0.5),
                 source_fragment: e.source_fragment.unwrap_or_default(),
+                aliases: e.aliases,
                 source_message_id: None,
                 extraction_method: "llm".to_string(),
             })

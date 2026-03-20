@@ -360,6 +360,21 @@ CREATE NODE TABLE ValidTo (
     context          STRING
 );
 
+// Lifecycle — no-delete supersede model
+CREATE NODE TABLE Supersedes (
+    id               STRING PRIMARY KEY,
+    reason           STRING,
+    confidence       DOUBLE DEFAULT 1.0,
+    label            STRING,
+    label_resolved   STRING,
+    learned_at       TIMESTAMP,
+    expire_at        TIMESTAMP,
+    created_at       TIMESTAMP,
+    updated_at       TIMESTAMP,
+    layer            INT16 DEFAULT 0,
+    context          STRING
+);
+
 
 // ============================================================================
 // POLYMORPHIC REL TABLES (bipartite wiring)
@@ -416,6 +431,10 @@ CREATE REL TABLE TO_ValidFrom (FROM ValidFrom TO Time | AbstractTime, role STRIN
 // ValidTo
 CREATE REL TABLE FROM_ValidTo (FROM Fact | Event | Memory TO ValidTo, role STRING DEFAULT 'source');
 CREATE REL TABLE TO_ValidTo (FROM ValidTo TO Time | AbstractTime, role STRING DEFAULT 'target');
+
+// Supersedes (lifecycle — no-delete model)
+CREATE REL TABLE FROM_Supersedes (FROM Fact | Event | Memory TO Supersedes, role STRING DEFAULT 'new_version');
+CREATE REL TABLE TO_Supersedes (FROM Supersedes TO Fact | Event | Memory, role STRING DEFAULT 'old_version');
 
 // Time Tree
 CREATE REL TABLE TIME_HIERARCHY (FROM Time TO Time, ONE_TO_MANY);

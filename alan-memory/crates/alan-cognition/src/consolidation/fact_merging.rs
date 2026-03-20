@@ -7,23 +7,27 @@ use alan_core::entity::{AnyContentNode, Fact};
 
 use crate::context::CognitiveContext;
 use crate::error::{CognitionError, Result};
+use crate::extraction::output::SupersedeResult;
 use crate::traits::LlmBackend;
 use crate::traits::llm as llm_util;
 
 use super::prompt::contradiction;
 
-/// LLM response for contradiction detection.
+/// LLM response for the enhanced contradiction/supersede detection.
 #[derive(Debug, Deserialize)]
-struct ContradictionResponse {
+struct ReconciliationResponse {
     relationship: String,
     confidence: f64,
     #[allow(dead_code)]
     reasoning: String,
+    #[serde(default)]
+    should_supersede: bool,
+    supersede_reason: Option<String>,
     suggested_certainty_adjustment: f64,
 }
 
-/// Step that detects contradictions between new and existing facts and adjusts
-/// certainty accordingly.
+/// Step that detects contradictions and updates between new and existing facts,
+/// adjusts certainty, and creates supersede records instead of deleting.
 pub struct FactMergingStep {
     pub llm: Arc<dyn LlmBackend>,
 }
@@ -40,7 +44,7 @@ impl FactMergingStep {
 
         debug!(
             count = ctx.extracted_facts.len(),
-            "Starting fact merging"
+            "Starting fact merging with supersede model"
         );
 
         // Collect existing fact labels from already-resolved nodes.
@@ -58,6 +62,7 @@ impl FactMergingStep {
             .collect();
 
         let mut new_fact_nodes = Vec::new();
+        let mut supersede_results = Vec::new();
 
         // Clone extracted facts so we don't hold an immutable borrow on ctx.
         let extracted_facts = ctx.extracted_facts.clone();
@@ -65,7 +70,7 @@ impl FactMergingStep {
         for extracted in &extracted_facts {
             let mut certainty = extracted.certainty;
 
-            // Compare with existing facts for contradictions / confirmations.
+            // Compare with existing facts for contradictions / confirmations / updates.
             for (existing_idx, existing_label) in &existing_facts {
                 let prompt = contradiction::contradiction_detection_prompt(
                     &extracted.label,
@@ -73,7 +78,7 @@ impl FactMergingStep {
                 );
                 let system = contradiction::contradiction_detection_system();
 
-                match llm_util::complete_structured::<ContradictionResponse>(
+                match llm_util::complete_structured::<ReconciliationResponse>(
                     self.llm.as_ref(),
                     &prompt,
                     Some(system),
@@ -101,22 +106,48 @@ impl FactMergingStep {
                                     + resp.suggested_certainty_adjustment.abs())
                                 .clamp(0.0, 1.0);
                             }
-                            "contradicts" => {
+                            "contradicts" | "updates" => {
                                 debug!(
                                     new = %extracted.label,
                                     existing = %existing_label,
-                                    "Fact contradiction detected — reducing certainty"
+                                    relationship = %resp.relationship,
+                                    "Fact supersede detected"
                                 );
-                                // Weaken existing fact.
-                                if let AnyContentNode::Fact(ref mut f) =
-                                    ctx.resolved_nodes[*existing_idx]
-                                {
-                                    f.certainty = (f.certainty
-                                        - resp.suggested_certainty_adjustment.abs())
-                                    .clamp(0.0, 1.0);
+
+                                if resp.should_supersede {
+                                    // Record supersede — do NOT delete the old fact.
+                                    // The old fact gets weakened certainty and an
+                                    // expiration will be set by the forgetting pipeline.
+                                    if let AnyContentNode::Fact(ref mut f) =
+                                        ctx.resolved_nodes[*existing_idx]
+                                    {
+                                        // Drastically reduce certainty of superseded fact.
+                                        f.certainty = (f.certainty * 0.2).clamp(0.0, 1.0);
+                                    }
+
+                                    supersede_results.push(SupersedeResult {
+                                        new_label: extracted.label.clone(),
+                                        old_label: existing_label.clone(),
+                                        reason: resp
+                                            .supersede_reason
+                                            .unwrap_or_else(|| resp.relationship.clone()),
+                                        confidence: resp.confidence,
+                                    });
+
+                                    // New fact gets high certainty — it's the latest info.
+                                    certainty = certainty.max(0.8);
+                                } else {
+                                    // Weaken both slightly when contradicting without
+                                    // clear supersede.
+                                    if let AnyContentNode::Fact(ref mut f) =
+                                        ctx.resolved_nodes[*existing_idx]
+                                    {
+                                        f.certainty = (f.certainty
+                                            - resp.suggested_certainty_adjustment.abs())
+                                        .clamp(0.0, 1.0);
+                                    }
+                                    certainty = (certainty * 0.8).clamp(0.0, 1.0);
                                 }
-                                // Weaken new fact slightly as well — both are uncertain.
-                                certainty = (certainty * 0.8).clamp(0.0, 1.0);
                             }
                             _ => {
                                 // "unrelated" — no adjustment.
@@ -125,7 +156,7 @@ impl FactMergingStep {
                     }
                     Ok(_) => {}
                     Err(e) => {
-                        warn!(error = %e, "Contradiction detection LLM call failed");
+                        warn!(error = %e, "Fact reconciliation LLM call failed");
                         ctx.record_error(CognitionError::ProcessFailed {
                             process: "fact_merging".into(),
                             message: e.to_string(),
@@ -144,7 +175,23 @@ impl FactMergingStep {
 
         ctx.resolved_nodes.extend(new_fact_nodes);
 
-        debug!("Fact merging complete");
+        // TODO: Convert supersede_results into Supersedes edges in relation wiring.
+        // For now, store them as extracted relations so the wiring step can pick them up.
+        for sr in supersede_results {
+            ctx.extracted_relations.push(crate::extraction::output::ExtractedRelation {
+                from_label: sr.new_label,
+                to_label: sr.old_label,
+                edge_type: "Supersedes".to_string(),
+                properties: serde_json::json!({
+                    "reason": sr.reason,
+                    "confidence": sr.confidence,
+                }),
+                confidence: sr.confidence,
+                source_message_id: None,
+            });
+        }
+
+        debug!("Fact merging with supersede model complete");
         Ok(())
     }
 }

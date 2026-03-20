@@ -3,13 +3,16 @@ use std::sync::Arc;
 use tracing::{debug, info};
 
 use crate::consolidation::ConsolidationProcess;
+use crate::consolidation::unified_process::UnifiedConsolidationProcess;
 use crate::context::CognitiveContext;
 use crate::error::{CognitionError, Result};
+use crate::extraction::unified_process::UnifiedExtractionProcess;
 use crate::forgetting::ForgettingProcess;
 use crate::temporal::TemporalLinkingProcess;
 use crate::traits::cognitive_process::{CognitiveProcess, ProcessKind, ProcessResult};
 use crate::traits::embedder::EmbedderBackend;
 use crate::traits::llm::LlmBackend;
+use crate::traits::ner::NerBackend;
 
 /// Manages all cognitive processes and provides convenience methods for
 /// running them individually or in groups.
@@ -31,8 +34,8 @@ impl CognitiveProcessManager {
         self.processes.push(process);
     }
 
-    /// Create a manager pre-populated with the default process set:
-    /// consolidation, temporal linking, and forgetting.
+    /// Create a manager pre-populated with the **legacy** process set:
+    /// consolidation (pairwise), temporal linking, and forgetting.
     pub fn default_with_backends(
         llm: Arc<dyn LlmBackend>,
         embedder: Arc<dyn EmbedderBackend>,
@@ -46,6 +49,40 @@ impl CognitiveProcessManager {
 
         manager.register(Box::new(TemporalLinkingProcess::new(Arc::clone(&llm))));
 
+        manager.register(Box::new(ForgettingProcess::new()));
+
+        manager
+    }
+
+    /// Create a manager pre-populated with the **unified v2** pipeline:
+    ///
+    /// Reactive: UnifiedExtraction (1 LLM call) → UnifiedConsolidation (1 LLM call)
+    /// Periodic: TemporalLinking + Forgetting
+    ///
+    /// Total: 2 LLM calls per ingestion (down from 4+ extraction + N pairwise consolidation).
+    pub fn unified_with_backends(
+        llm: Arc<dyn LlmBackend>,
+        embedder: Arc<dyn EmbedderBackend>,
+        ner: Option<Arc<dyn NerBackend>>,
+    ) -> Self {
+        let mut manager = Self::new();
+
+        // Reactive: Unified extraction (single LLM call for all 4 layers)
+        manager.register(Box::new(UnifiedExtractionProcess::new(
+            Arc::clone(&llm),
+            ner,
+        )));
+
+        // Reactive: Unified consolidation (single LLM call for all decisions)
+        manager.register(Box::new(UnifiedConsolidationProcess::new(
+            Arc::clone(&llm),
+            Arc::clone(&embedder),
+        )));
+
+        // Periodic: Temporal linking
+        manager.register(Box::new(TemporalLinkingProcess::new(Arc::clone(&llm))));
+
+        // Periodic: Forgetting
         manager.register(Box::new(ForgettingProcess::new()));
 
         manager

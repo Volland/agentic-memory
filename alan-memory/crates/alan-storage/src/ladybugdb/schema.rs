@@ -260,9 +260,23 @@ CREATE NODE TABLE IF NOT EXISTS ValidTo (
     context STRING
 );
 
+CREATE NODE TABLE IF NOT EXISTS Supersedes (
+    id STRING PRIMARY KEY,
+    label STRING,
+    label_resolved STRING,
+    reason STRING,
+    confidence FLOAT,
+    learned_at TIMESTAMP,
+    expire_at TIMESTAMP,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    layer INT16,
+    context STRING
+);
+
 -- Bipartite REL tables (content_node -> edge_node -> content_node)
-CREATE REL TABLE IF NOT EXISTS FROM_NODE (FROM Entity | Time | AbstractTime | Fact | Event | Memory TO Contains | Source | Similar | HasProperty | LeadsTo | Prevents | Causes | BecauseOf | Before | After | During | ValidFrom | ValidTo);
-CREATE REL TABLE IF NOT EXISTS TO_NODE   (FROM Contains | Source | Similar | HasProperty | LeadsTo | Prevents | Causes | BecauseOf | Before | After | During | ValidFrom | ValidTo TO Entity | Time | AbstractTime | Fact | Event | Memory);
+CREATE REL TABLE IF NOT EXISTS FROM_NODE (FROM Entity | Time | AbstractTime | Fact | Event | Memory TO Contains | Source | Similar | HasProperty | LeadsTo | Prevents | Causes | BecauseOf | Before | After | During | ValidFrom | ValidTo | Supersedes);
+CREATE REL TABLE IF NOT EXISTS TO_NODE   (FROM Contains | Source | Similar | HasProperty | LeadsTo | Prevents | Causes | BecauseOf | Before | After | During | ValidFrom | ValidTo | Supersedes TO Entity | Time | AbstractTime | Fact | Event | Memory);
 "#;
 
 /// Return the full Cypher DDL for initializing the LadybugDB schema.

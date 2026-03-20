@@ -129,6 +129,11 @@ pub fn validate_wiring(
             matches!(from_type, Fact | Event | Memory)
                 && matches!(to_type, Time | AbstractTime)
         }
+        Supersedes => {
+            // New node supersedes old node — same layer types.
+            matches!(from_type, Fact | Event | Memory | Entity)
+                && matches!(to_type, Fact | Event | Memory | Entity)
+        }
         ValidTo => {
             matches!(from_type, Fact | Event | Memory)
                 && matches!(to_type, Time | AbstractTime)

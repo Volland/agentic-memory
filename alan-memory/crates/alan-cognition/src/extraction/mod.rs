@@ -3,6 +3,8 @@ pub mod entity_extraction;
 pub mod fact_extraction;
 pub mod event_extraction;
 pub mod memory_extraction;
+pub mod unified_extraction;
+pub mod unified_process;
 pub mod prompt;
 
 use std::sync::Arc;

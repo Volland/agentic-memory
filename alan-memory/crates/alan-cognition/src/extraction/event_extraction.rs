@@ -5,7 +5,7 @@ use tracing::warn;
 
 use crate::context::CognitiveContext;
 use crate::error::Result;
-use crate::extraction::output::ExtractedEvent;
+use crate::extraction::output::{EventParticipant, ExtractedEvent};
 use crate::extraction::prompt::event::event_extraction_prompt;
 use crate::traits::classifier::ClassifierBackend;
 use crate::traits::llm::{self, LlmBackend};
@@ -17,12 +17,21 @@ pub struct EventExtractionStep {
 }
 
 #[derive(Debug, Deserialize)]
+struct LlmEventParticipant {
+    label: String,
+    role: String,
+}
+
+#[derive(Debug, Deserialize)]
 struct LlmEvent {
     label: String,
     predicate: String,
     status: Option<String>,
     is_ongoing: Option<bool>,
     temporal_ref: Option<String>,
+    #[serde(default)]
+    participants: Vec<LlmEventParticipant>,
+    causal_hint: Option<String>,
     source_fragment: Option<String>,
 }
 
@@ -91,12 +100,23 @@ impl EventExtractionStep {
 
             let is_ongoing = ev.is_ongoing.unwrap_or(status == "ongoing");
 
+            let participants: Vec<EventParticipant> = ev
+                .participants
+                .into_iter()
+                .map(|p| EventParticipant {
+                    label: p.label,
+                    role: p.role,
+                })
+                .collect();
+
             extracted.push(ExtractedEvent {
                 label: ev.label,
                 predicate: ev.predicate,
                 status,
                 is_ongoing,
                 temporal_ref: ev.temporal_ref,
+                participants,
+                causal_hint: ev.causal_hint,
                 source_fragment: ev.source_fragment.unwrap_or_default(),
                 source_message_id: None,
             });

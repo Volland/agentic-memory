@@ -9,6 +9,7 @@ pub mod leads_to;
 pub mod prevents;
 pub mod similar;
 pub mod source;
+pub mod supersedes;
 pub mod valid_from;
 pub mod valid_to;
 
@@ -23,6 +24,7 @@ pub use leads_to::LeadsTo;
 pub use prevents::Prevents;
 pub use similar::Similar;
 pub use source::Source;
+pub use supersedes::Supersedes;
 pub use valid_from::ValidFrom;
 pub use valid_to::ValidTo;
 
@@ -44,6 +46,7 @@ pub enum EdgeNodeType {
     Before,
     After,
     During,
+    Supersedes,
     ValidFrom,
     ValidTo,
 }
@@ -61,6 +64,8 @@ pub enum EdgeCategory {
     Temporal,
     /// Temporal validity windows.
     Validity,
+    /// Knowledge lifecycle (supersede, deprecate).
+    Lifecycle,
 }
 
 impl EdgeNodeType {
@@ -78,6 +83,7 @@ impl EdgeNodeType {
             EdgeNodeType::Before => EdgeCategory::Temporal,
             EdgeNodeType::After => EdgeCategory::Temporal,
             EdgeNodeType::During => EdgeCategory::Temporal,
+            EdgeNodeType::Supersedes => EdgeCategory::Lifecycle,
             EdgeNodeType::ValidFrom => EdgeCategory::Validity,
             EdgeNodeType::ValidTo => EdgeCategory::Validity,
         }
@@ -108,6 +114,7 @@ pub enum AnyRelationNode {
     Before(Before),
     After(After),
     During(During),
+    Supersedes(Supersedes),
     ValidFrom(ValidFrom),
     ValidTo(ValidTo),
 }
@@ -127,6 +134,7 @@ impl AnyRelationNode {
             AnyRelationNode::Before(n) => n.universal(),
             AnyRelationNode::After(n) => n.universal(),
             AnyRelationNode::During(n) => n.universal(),
+            AnyRelationNode::Supersedes(n) => n.universal(),
             AnyRelationNode::ValidFrom(n) => n.universal(),
             AnyRelationNode::ValidTo(n) => n.universal(),
         }
@@ -146,6 +154,7 @@ impl AnyRelationNode {
             AnyRelationNode::Before(n) => n.edge_type(),
             AnyRelationNode::After(n) => n.edge_type(),
             AnyRelationNode::During(n) => n.edge_type(),
+            AnyRelationNode::Supersedes(n) => n.edge_type(),
             AnyRelationNode::ValidFrom(n) => n.edge_type(),
             AnyRelationNode::ValidTo(n) => n.edge_type(),
         }

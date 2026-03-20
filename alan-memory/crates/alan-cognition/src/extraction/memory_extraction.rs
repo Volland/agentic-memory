@@ -18,9 +18,15 @@ pub struct MemoryExtractionStep {
 struct LlmMemory {
     label: String,
     predicate: String,
+    memory_type: Option<String>,
     significance: Option<String>,
     emotions: Option<Vec<String>>,
+    intensity: Option<f64>,
     reflection: Option<String>,
+    #[serde(default)]
+    connected_events: Vec<String>,
+    #[serde(default)]
+    connected_entities: Vec<String>,
     source_fragment: Option<String>,
 }
 
@@ -74,9 +80,13 @@ impl MemoryExtractionStep {
             .map(|m| ExtractedMemory {
                 label: m.label,
                 predicate: m.predicate,
+                memory_type: m.memory_type,
                 significance: m.significance,
                 emotions: m.emotions.unwrap_or_default(),
+                intensity: m.intensity.unwrap_or(0.5),
                 reflection: m.reflection,
+                connected_events: m.connected_events,
+                connected_entities: m.connected_entities,
                 source_fragment: m.source_fragment.unwrap_or_default(),
                 source_message_id: None,
             })
