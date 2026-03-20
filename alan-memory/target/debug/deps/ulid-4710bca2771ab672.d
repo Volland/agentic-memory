@@ -1,0 +1,10 @@
+/Users/volodymyrpavlyshyn/Documents/work/memory-project/alan-memory/target/debug/deps/libulid-4710bca2771ab672.rmeta: /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/lib.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/base32.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/generator.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/serde.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/time.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/time_utils.rs
+
+/Users/volodymyrpavlyshyn/Documents/work/memory-project/alan-memory/target/debug/deps/ulid-4710bca2771ab672.d: /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/lib.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/base32.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/generator.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/serde.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/time.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/time_utils.rs
+
+/Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/lib.rs:
+/Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/base32.rs:
+/Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/generator.rs:
+/Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/serde.rs:
+/Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/time.rs:
+/Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ulid-1.2.1/src/time_utils.rs:

@@ -1,0 +1,54 @@
+/Users/volodymyrpavlyshyn/Documents/work/memory-project/alan-memory/target/debug/deps/libalan_cognition-92533c0985796ffc.rmeta: crates/alan-cognition/src/lib.rs crates/alan-cognition/src/traits/mod.rs crates/alan-cognition/src/traits/llm.rs crates/alan-cognition/src/traits/ner.rs crates/alan-cognition/src/traits/embedder.rs crates/alan-cognition/src/traits/classifier.rs crates/alan-cognition/src/traits/cognitive_process.rs crates/alan-cognition/src/chunk.rs crates/alan-cognition/src/context.rs crates/alan-cognition/src/error.rs crates/alan-cognition/src/extraction/mod.rs crates/alan-cognition/src/extraction/output.rs crates/alan-cognition/src/extraction/entity_extraction.rs crates/alan-cognition/src/extraction/fact_extraction.rs crates/alan-cognition/src/extraction/event_extraction.rs crates/alan-cognition/src/extraction/memory_extraction.rs crates/alan-cognition/src/extraction/prompt/mod.rs crates/alan-cognition/src/extraction/prompt/entity.rs crates/alan-cognition/src/extraction/prompt/fact.rs crates/alan-cognition/src/extraction/prompt/event.rs crates/alan-cognition/src/extraction/prompt/memory.rs crates/alan-cognition/src/consolidation/mod.rs crates/alan-cognition/src/consolidation/entity_resolution.rs crates/alan-cognition/src/consolidation/fact_merging.rs crates/alan-cognition/src/consolidation/relation_wiring.rs crates/alan-cognition/src/consolidation/similarity_detection.rs crates/alan-cognition/src/consolidation/embedding_step.rs crates/alan-cognition/src/consolidation/prompt/mod.rs crates/alan-cognition/src/consolidation/prompt/resolution.rs crates/alan-cognition/src/consolidation/prompt/contradiction.rs crates/alan-cognition/src/temporal/mod.rs crates/alan-cognition/src/temporal/temporal_extraction.rs crates/alan-cognition/src/temporal/time_resolution.rs crates/alan-cognition/src/temporal/validity_wiring.rs crates/alan-cognition/src/temporal/ordering.rs crates/alan-cognition/src/temporal/causality.rs crates/alan-cognition/src/temporal/prompt/mod.rs crates/alan-cognition/src/temporal/prompt/temporal.rs crates/alan-cognition/src/temporal/prompt/ordering.rs crates/alan-cognition/src/temporal/prompt/causality.rs crates/alan-cognition/src/forgetting/mod.rs crates/alan-cognition/src/forgetting/relevance_scoring.rs crates/alan-cognition/src/forgetting/expiration.rs crates/alan-cognition/src/forgetting/certainty_decay.rs crates/alan-cognition/src/forgetting/consolidation_candidates.rs crates/alan-cognition/src/manager.rs Cargo.toml
+
+/Users/volodymyrpavlyshyn/Documents/work/memory-project/alan-memory/target/debug/deps/alan_cognition-92533c0985796ffc.d: crates/alan-cognition/src/lib.rs crates/alan-cognition/src/traits/mod.rs crates/alan-cognition/src/traits/llm.rs crates/alan-cognition/src/traits/ner.rs crates/alan-cognition/src/traits/embedder.rs crates/alan-cognition/src/traits/classifier.rs crates/alan-cognition/src/traits/cognitive_process.rs crates/alan-cognition/src/chunk.rs crates/alan-cognition/src/context.rs crates/alan-cognition/src/error.rs crates/alan-cognition/src/extraction/mod.rs crates/alan-cognition/src/extraction/output.rs crates/alan-cognition/src/extraction/entity_extraction.rs crates/alan-cognition/src/extraction/fact_extraction.rs crates/alan-cognition/src/extraction/event_extraction.rs crates/alan-cognition/src/extraction/memory_extraction.rs crates/alan-cognition/src/extraction/prompt/mod.rs crates/alan-cognition/src/extraction/prompt/entity.rs crates/alan-cognition/src/extraction/prompt/fact.rs crates/alan-cognition/src/extraction/prompt/event.rs crates/alan-cognition/src/extraction/prompt/memory.rs crates/alan-cognition/src/consolidation/mod.rs crates/alan-cognition/src/consolidation/entity_resolution.rs crates/alan-cognition/src/consolidation/fact_merging.rs crates/alan-cognition/src/consolidation/relation_wiring.rs crates/alan-cognition/src/consolidation/similarity_detection.rs crates/alan-cognition/src/consolidation/embedding_step.rs crates/alan-cognition/src/consolidation/prompt/mod.rs crates/alan-cognition/src/consolidation/prompt/resolution.rs crates/alan-cognition/src/consolidation/prompt/contradiction.rs crates/alan-cognition/src/temporal/mod.rs crates/alan-cognition/src/temporal/temporal_extraction.rs crates/alan-cognition/src/temporal/time_resolution.rs crates/alan-cognition/src/temporal/validity_wiring.rs crates/alan-cognition/src/temporal/ordering.rs crates/alan-cognition/src/temporal/causality.rs crates/alan-cognition/src/temporal/prompt/mod.rs crates/alan-cognition/src/temporal/prompt/temporal.rs crates/alan-cognition/src/temporal/prompt/ordering.rs crates/alan-cognition/src/temporal/prompt/causality.rs crates/alan-cognition/src/forgetting/mod.rs crates/alan-cognition/src/forgetting/relevance_scoring.rs crates/alan-cognition/src/forgetting/expiration.rs crates/alan-cognition/src/forgetting/certainty_decay.rs crates/alan-cognition/src/forgetting/consolidation_candidates.rs crates/alan-cognition/src/manager.rs Cargo.toml
+
+crates/alan-cognition/src/lib.rs:
+crates/alan-cognition/src/traits/mod.rs:
+crates/alan-cognition/src/traits/llm.rs:
+crates/alan-cognition/src/traits/ner.rs:
+crates/alan-cognition/src/traits/embedder.rs:
+crates/alan-cognition/src/traits/classifier.rs:
+crates/alan-cognition/src/traits/cognitive_process.rs:
+crates/alan-cognition/src/chunk.rs:
+crates/alan-cognition/src/context.rs:
+crates/alan-cognition/src/error.rs:
+crates/alan-cognition/src/extraction/mod.rs:
+crates/alan-cognition/src/extraction/output.rs:
+crates/alan-cognition/src/extraction/entity_extraction.rs:
+crates/alan-cognition/src/extraction/fact_extraction.rs:
+crates/alan-cognition/src/extraction/event_extraction.rs:
+crates/alan-cognition/src/extraction/memory_extraction.rs:
+crates/alan-cognition/src/extraction/prompt/mod.rs:
+crates/alan-cognition/src/extraction/prompt/entity.rs:
+crates/alan-cognition/src/extraction/prompt/fact.rs:
+crates/alan-cognition/src/extraction/prompt/event.rs:
+crates/alan-cognition/src/extraction/prompt/memory.rs:
+crates/alan-cognition/src/consolidation/mod.rs:
+crates/alan-cognition/src/consolidation/entity_resolution.rs:
+crates/alan-cognition/src/consolidation/fact_merging.rs:
+crates/alan-cognition/src/consolidation/relation_wiring.rs:
+crates/alan-cognition/src/consolidation/similarity_detection.rs:
+crates/alan-cognition/src/consolidation/embedding_step.rs:
+crates/alan-cognition/src/consolidation/prompt/mod.rs:
+crates/alan-cognition/src/consolidation/prompt/resolution.rs:
+crates/alan-cognition/src/consolidation/prompt/contradiction.rs:
+crates/alan-cognition/src/temporal/mod.rs:
+crates/alan-cognition/src/temporal/temporal_extraction.rs:
+crates/alan-cognition/src/temporal/time_resolution.rs:
+crates/alan-cognition/src/temporal/validity_wiring.rs:
+crates/alan-cognition/src/temporal/ordering.rs:
+crates/alan-cognition/src/temporal/causality.rs:
+crates/alan-cognition/src/temporal/prompt/mod.rs:
+crates/alan-cognition/src/temporal/prompt/temporal.rs:
+crates/alan-cognition/src/temporal/prompt/ordering.rs:
+crates/alan-cognition/src/temporal/prompt/causality.rs:
+crates/alan-cognition/src/forgetting/mod.rs:
+crates/alan-cognition/src/forgetting/relevance_scoring.rs:
+crates/alan-cognition/src/forgetting/expiration.rs:
+crates/alan-cognition/src/forgetting/certainty_decay.rs:
+crates/alan-cognition/src/forgetting/consolidation_candidates.rs:
+crates/alan-cognition/src/manager.rs:
+Cargo.toml:
+
+# env-dep:CLIPPY_ARGS=
+# env-dep:CLIPPY_CONF_DIR

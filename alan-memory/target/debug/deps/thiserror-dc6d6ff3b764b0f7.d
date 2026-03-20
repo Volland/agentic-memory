@@ -1,0 +1,12 @@
+/Users/volodymyrpavlyshyn/Documents/work/memory-project/alan-memory/target/debug/deps/libthiserror-dc6d6ff3b764b0f7.rmeta: /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/volodymyrpavlyshyn/Documents/work/memory-project/alan-memory/target/debug/build/thiserror-bd805191c075a158/out/private.rs
+
+/Users/volodymyrpavlyshyn/Documents/work/memory-project/alan-memory/target/debug/deps/thiserror-dc6d6ff3b764b0f7.d: /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/volodymyrpavlyshyn/Documents/work/memory-project/alan-memory/target/debug/build/thiserror-bd805191c075a158/out/private.rs
+
+/Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs:
+/Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs:
+/Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs:
+/Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs:
+/Users/volodymyrpavlyshyn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs:
+/Users/volodymyrpavlyshyn/Documents/work/memory-project/alan-memory/target/debug/build/thiserror-bd805191c075a158/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/volodymyrpavlyshyn/Documents/work/memory-project/alan-memory/target/debug/build/thiserror-bd805191c075a158/out

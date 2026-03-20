@@ -1,0 +1,41 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/alan-core",
+    "crates/alan-cognition",
+    "crates/alan-storage",
+    "crates/alan-memory",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+rust-version = "1.85"
+
+[workspace.dependencies]
+# Internal
+alan-core = { path = "crates/alan-core" }
+alan-cognition = { path = "crates/alan-cognition" }
+alan-storage = { path = "crates/alan-storage" }
+alan-memory = { path = "crates/alan-memory" }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Async
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+
+# Error handling
+thiserror = "2"
+
+# IDs
+ulid = { version = "1", features = ["serde"] }
+
+# Logging
+tracing = "0.1"
